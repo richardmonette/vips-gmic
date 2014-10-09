@@ -33,7 +33,7 @@ debug := CXXFLAGS += -g
 sb := CXXFLAGS += -g 
 
 $(OUT): $(OBJS)
-#linux
+#linux ... must link C++ plugins with the C++ compiler
 	$(CXX) -o $(OUT) -shared $(OBJS)
 #solaris
 #	ld -o $(OUT) -G $(OBJS)
@@ -45,3 +45,13 @@ clean:
 
 tags: $(TAGS)
 	ctags $(TAGS)
+
+# version as MAJOR.MINOR
+VIPS_VERSION = $(shell pkg-config vipsCC --modversion | \
+	         awk '{split($$1,a,"."); print a[1]"."a[2]}')
+PLUGIN_DIR = $(VIPSHOME)/lib/$(VIPS_VERSION)
+
+install: $(OUT)
+	-mkdir -p $(PLUGIN_DIR)
+	-cp $(OUT) $(PLUGIN_DIR)
+

@@ -359,7 +359,7 @@ vips_gmic_init( VipsGMic *vipsgmic )
  *
  * Returns: 0 on success, -1 on failure. 
  */
-int
+G_MODULE_EXPORT int
 vips_gmic( VipsImage **in, VipsImage **out, int n, 
 	int padding, double x_scale, double y_scale, const char *command, ... )
 {
@@ -379,9 +379,11 @@ vips_gmic( VipsImage **in, VipsImage **out, int n,
 
 /* This is called on module load.
  */
-G_MODULE_EXPORT const gchar *
+const gchar *
 g_module_check_init( GModule *module )
 {
+	printf( "vips_gmic: module init\n" ); 
+
 	vips_gmic_get_type();
 
 	/* We can't be unloaded, there would be chaos.
