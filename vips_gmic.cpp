@@ -126,11 +126,79 @@ vips_from_gmic( gmic_image<T> *img, VipsRect *img_rect, VipsRegion *out )
 	}
 }
 
+/* One of these for each thread.
+ */
+struct VipsGMicSequence { 
+	VipsRegion **ir;
+	gmic *gmic_instance;
+};
+
+static int
+vips_gmic_stop( void *vseq, void *a, void *b )
+{
+	VipsGMicSequence *seq = (VipsGMicSequence *) vseq;
+
+        if( seq->ir ) {
+		int i;
+
+		for( i = 0; seq->ir[i]; i++ )
+			g_object_unref( seq->ir[i] );
+		VIPS_FREE( seq->ir );
+	}
+
+	printf( "thread %p: deleting gmic instance %p\n",
+		g_thread_self(), seq->gmic_instance ); 
+
+	delete seq->gmic_instance;
+
+	VIPS_FREE( seq );
+
+	return( 0 );
+}
+
+static void *
+vips_gmic_start( VipsImage *out, void *a, void *b )
+{
+	VipsImage **in = (VipsImage **) a;
+
+	VipsGMicSequence *seq;
+	int i, n;
+
+	if( !(seq = VIPS_NEW( NULL, VipsGMicSequence )) )
+		return( NULL ); 
+
+	/* Make a region for each input image. 
+	 */
+	for( n = 0; in[n]; n++ )
+		;
+
+	if( !(seq->ir = VIPS_ARRAY( NULL, n + 1, VipsRegion * )) ) {
+		vips_gmic_stop( seq, NULL, NULL );
+		return( NULL );
+	}
+
+	for( i = 0; i < n; i++ )
+		if( !(seq->ir[i] = vips_region_new( in[i] )) ) {
+			vips_gmic_stop( seq, NULL, NULL );
+			return( NULL );
+		}
+	seq->ir[n] = NULL;
+
+	/* Make a gmic for this thread.
+	 */
+	seq->gmic_instance = new gmic; 
+
+	printf( "thread %p: created gmic instance %p\n",
+		g_thread_self(), seq->gmic_instance ); 
+
+	return( (void *) seq );
+}
+
 template<typename T> static int
 vips_gmic_gen_template( VipsRegion *oreg, 
-	void *seq, void *a, void *b, gboolean *stop )
+	void *vseq, void *a, void *b, gboolean *stop )
 {
-	VipsRegion **ir = (VipsRegion **) seq;
+	VipsGMicSequence *seq = (VipsGMicSequence *) vseq;
 	VipsGMic *vipsgmic = (VipsGMic *) b;
 	int ninput = VIPS_AREA( vipsgmic->in )->n;
 	const int tile_border = vips_gmic_get_tile_border( vipsgmic );
@@ -143,29 +211,35 @@ vips_gmic_gen_template( VipsRegion *oreg,
 	vips_rect_marginadjust( &need, tile_border );
 	image.left = 0;
 	image.top = 0;
-	image.width = ir[0]->im->Xsize;
-	image.height = ir[0]->im->Ysize;
+	image.width = seq->ir[0]->im->Xsize;
+	image.height = seq->ir[0]->im->Ysize;
 	vips_rect_intersectrect( &need, &image, &need );
 
-	for( int i = 0; ir[i]; i++ ) 
-		if( vips_region_prepare( ir[i], &need ) ) 
+	for( int i = 0; seq->ir[i]; i++ ) 
+		if( vips_region_prepare( seq->ir[i], &need ) ) 
 			return( -1 );
 
-	gmic gmic_instance;
+	printf( "thread %p: about to process\n", 
+		g_thread_self() ) ; 
+
 	gmic_list<T> images;
 	gmic_list<char> images_names;
 
 	try {
 		images.assign( (guint) ninput );
 
-		for( int i = 0; ir[i]; i++ ) {
+		for( int i = 0; seq->ir[i]; i++ ) {
 			gmic_image<T> &img = images._data[i];
 			img.assign( need.width, need.height, 
-				1, ir[i]->im->Bands );
-			vips_to_gmic<T>( ir[0], &need, &img );
+				1, seq->ir[i]->im->Bands );
+			vips_to_gmic<T>( seq->ir[0], &need, &img );
 		}
 
-		gmic_instance.run( vipsgmic->command, images, images_names );
+		printf( "thread %p: using gmic instance %p\n",
+			g_thread_self(), seq->gmic_instance ); 
+
+		seq->gmic_instance->run( vipsgmic->command, 
+			images, images_names );
 		vips_from_gmic<T>( &images._data[0], &need, oreg );
 	}
 	catch( gmic_exception e ) { 
@@ -266,20 +340,12 @@ vips_gmic_build( VipsObject *object )
 
 	if( vips_image_pipeline_array( vipsgmic->out, 
 		VIPS_DEMAND_STYLE_ANY, in ) )
-	return( -1 );
+		return( -1 );
 
-	if( ninput > 0 ) {
-		if( vips_image_generate( vipsgmic->out,
-			vips_start_many, vips_gmic_gen, vips_stop_many, 
-			in, vipsgmic ) )
-			return( -1 );
-	}
-	else {
-		if( vips_image_generate( vipsgmic->out, 
-			NULL, vips_gmic_gen, NULL, 
-			NULL, vipsgmic ) )
-			return( -1 );
-	}
+	if( vips_image_generate( vipsgmic->out,
+		vips_gmic_start, vips_gmic_gen, vips_gmic_stop, 
+		in, vipsgmic ) )
+		return( -1 );
 
 	return( 0 );
 }
