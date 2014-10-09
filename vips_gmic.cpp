@@ -30,10 +30,7 @@
 
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif /*HAVE_CONFIG_H*/
-#include <vips/intl.h>
+#define _(S) (S)
 
 #include <vips/vips.h>
 #include <vips/dispatch.h>
