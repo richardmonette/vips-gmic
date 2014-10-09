@@ -376,3 +376,17 @@ vips_gmic( VipsImage **in, VipsImage **out, int n,
 
 	return( result );
 }
+
+/* This is called on module load.
+ */
+G_MODULE_EXPORT const gchar *
+g_module_check_init( GModule *module )
+{
+	vips_gmic_get_type();
+
+	/* We can't be unloaded, there would be chaos.
+	 */
+	g_module_make_resident( module );
+
+	return( NULL ); 
+}
