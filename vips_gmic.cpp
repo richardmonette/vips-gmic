@@ -347,6 +347,7 @@ vips_gmic_init( VipsGMic *vipsgmic )
 {
 }
 
+extern "C" {
 /**
  * vips_gmic:
  * @in: (array length=n) (transfer none): array of input images
@@ -376,13 +377,17 @@ vips_gmic( VipsImage **in, VipsImage **out, int n,
 
 	return( result );
 }
+}
 
+extern "C" {
 /* This is called on module load.
  */
 const gchar *
 g_module_check_init( GModule *module )
 {
+#ifdef DEBUG
 	printf( "vips_gmic: module init\n" ); 
+#endif /*DEBUG*/
 
 	vips_gmic_get_type();
 
@@ -391,4 +396,5 @@ g_module_check_init( GModule *module )
 	g_module_make_resident( module );
 
 	return( NULL ); 
+}
 }

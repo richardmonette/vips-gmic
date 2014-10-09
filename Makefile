@@ -49,7 +49,7 @@ tags: $(TAGS)
 # version as MAJOR.MINOR
 VIPS_VERSION = $(shell pkg-config vipsCC --modversion | \
 	         awk '{split($$1,a,"."); print a[1]"."a[2]}')
-PLUGIN_DIR = $(VIPSHOME)/lib/$(VIPS_VERSION)
+PLUGIN_DIR = $(VIPSHOME)/lib/vips-plugins-$(VIPS_VERSION)
 
 install: $(OUT)
 	-mkdir -p $(PLUGIN_DIR)
