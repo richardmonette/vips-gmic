@@ -12,10 +12,13 @@ HEADERS = Cimg.h gmic_def.h gmic.h
 # All
 TAGS = $(SRC) $(HEADERS)
 
+# gmic/cimg config
+# dont use the threading stuff, vips does that
+
 # linux
-CXXFLAGS = -Dgmic_build -Dcimg_strict -Dcimg_OS=1 -Dcimg_display_type=0 
+CXXFLAGS = -Dgmic_build -Dcimg_strict -Dcimg_OS=1 -Dcimg_display=0 
 # win32
-#CXXFLAGS = -Dgmic_build -Dcimg_strict -Dcimg_OS=2 -Dcimg_display_type=0 
+#CXXFLAGS = -Dgmic_build -Dcimg_strict -Dcimg_OS=2 -Dcimg_display=0 
 
 #linux
 CXXFLAGS += -shared -fPIC 
