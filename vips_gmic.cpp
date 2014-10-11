@@ -146,9 +146,6 @@ vips_gmic_stop( void *vseq, void *a, void *b )
 		VIPS_FREE( seq->ir );
 	}
 
-	printf( "thread %p: deleting gmic instance %p\n",
-		g_thread_self(), seq->gmic_instance ); 
-
 	delete seq->gmic_instance;
 
 	VIPS_FREE( seq );
@@ -188,17 +185,13 @@ vips_gmic_start( VipsImage *out, void *a, void *b )
 	 */
 	seq->gmic_instance = new gmic; 
 
-	printf( "thread %p: created gmic instance %p\n",
-		g_thread_self(), seq->gmic_instance ); 
-
 	return( (void *) seq );
 }
 
 template<typename T> static int
 vips_gmic_gen_template( VipsRegion *oreg, 
-	void *vseq, void *a, void *b, gboolean *stop )
+	VipsGMicSequence *seq, void *a, void *b, gboolean *stop )
 {
-	VipsGMicSequence *seq = (VipsGMicSequence *) vseq;
 	VipsGMic *vipsgmic = (VipsGMic *) b;
 	int ninput = VIPS_AREA( vipsgmic->in )->n;
 	const int tile_border = vips_gmic_get_tile_border( vipsgmic );
@@ -219,9 +212,6 @@ vips_gmic_gen_template( VipsRegion *oreg,
 		if( vips_region_prepare( seq->ir[i], &need ) ) 
 			return( -1 );
 
-	printf( "thread %p: about to process\n", 
-		g_thread_self() ) ; 
-
 	gmic_list<T> images;
 	gmic_list<char> images_names;
 
@@ -234,9 +224,6 @@ vips_gmic_gen_template( VipsRegion *oreg,
 				1, seq->ir[i]->im->Bands );
 			vips_to_gmic<T>( seq->ir[0], &need, &img );
 		}
-
-		printf( "thread %p: using gmic instance %p\n",
-			g_thread_self(), seq->gmic_instance ); 
 
 		seq->gmic_instance->run( vipsgmic->command, 
 			images, images_names );
@@ -255,11 +242,11 @@ vips_gmic_gen_template( VipsRegion *oreg,
 }
 
 static int
-vips_gmic_gen( VipsRegion *oreg, void *seq, void *a, void *b, gboolean *stop )
+vips_gmic_gen( VipsRegion *oreg, void *vseq, void *a, void *b, gboolean *stop )
 {
-	VipsRegion **ir = (VipsRegion **) seq;
-  
-	switch( ir[0]->im->BandFmt ) {
+	VipsGMicSequence *seq = (VipsGMicSequence *) vseq;
+
+	switch( seq->ir[0]->im->BandFmt ) {
 	case VIPS_FORMAT_UCHAR:
 		return( vips_gmic_gen_template<unsigned char>( oreg, 
 			seq, a, b, stop ) );
