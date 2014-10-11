@@ -326,7 +326,7 @@ vips_gmic_build( VipsObject *object )
 	g_object_set( vipsgmic, "out", vips_image_new(), NULL ); 
 
 	if( vips_image_pipeline_array( vipsgmic->out, 
-		VIPS_DEMAND_STYLE_ANY, in ) )
+		VIPS_DEMAND_STYLE_SMALLTILE, in ) )
 		return( -1 );
 
 	if( vips_image_generate( vipsgmic->out,

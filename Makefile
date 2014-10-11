@@ -28,12 +28,14 @@ CPPFLAGS += `pkg-config vipsCC --cflags`
 LDFLAGS += `pkg-config vipsCC --libs`
 OUT = vips-gmic.plg
 
-all: $(OUT)
+release: $(OUT)
 debug: $(OUT)
 
-all := CXXFLAGS += -O
-debug := CXXFLAGS += -g
-sb := CXXFLAGS += -g 
+.PHONY: debug  
+debug: CXXFLAGS += -g
+
+.PHONY: release  
+release: CXXFLAGS += -O3
 
 $(OUT): $(OBJS)
 #linux ... must link C++ plugins with the C++ compiler
