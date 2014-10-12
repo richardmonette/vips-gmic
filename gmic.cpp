@@ -13207,15 +13207,5 @@ template gmic::gmic(const char *const commands_line,
                     const char *const custom_commands=0,
                     const bool include_default_commands=true,
                     float *const p_progress=0, int *const p_cancel=0);
-template gmic::gmic(const char *const commands_line,
-                    gmic_list<unsigned char>& images, gmic_list<char>& images_names,
-                    const char *const custom_commands=0,
-                    const bool include_default_commands=true,
-                    float *const p_progress=0, int *const p_cancel=0);
-template gmic::gmic(const char *const commands_line,
-                    gmic_list<unsigned short>& images, gmic_list<char>& images_names,
-                    const char *const custom_commands=0,
-                    const bool include_default_commands=true,
-                    float *const p_progress=0, int *const p_cancel=0);
 #endif // #ifdef gmic_main
 #endif // #ifdef cimg_plugin
