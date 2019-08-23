@@ -24,15 +24,16 @@ CXXFLAGS = -Dgmic_build -Dcimg_strict -Dcimg_OS=1 -Dcimg_display=0
 CXXFLAGS += -shared -fPIC 
 #solaris
 #CXXFLAGS += -Xa -Kpic 
-CPPFLAGS += `pkg-config vipsCC --cflags`
-LDFLAGS += `pkg-config vipsCC --libs`
+CPPFLAGS += `pkg-config vips-cpp --cflags`
+LDFLAGS += `pkg-config vips-cpp --libs`
 OUT = vips-gmic.plg
 
 release: $(OUT)
 debug: $(OUT)
 
+# don't use -Wall ... G'MIC will drown you
 .PHONY: debug  
-debug: CXXFLAGS += -g
+debug: CXXFLAGS += -g 
 
 .PHONY: release  
 release: CXXFLAGS += -O3
@@ -52,7 +53,7 @@ tags: $(TAGS)
 	ctags $(TAGS)
 
 # version as MAJOR.MINOR
-VIPS_VERSION = $(shell pkg-config vipsCC --modversion | \
+VIPS_VERSION = $(shell pkg-config vips-cpp --modversion | \
 	         awk '{split($$1,a,"."); print a[1]"."a[2]}')
 PLUGIN_DIR = $(VIPSHOME)/lib/vips-plugins-$(VIPS_VERSION)
 

@@ -1,6 +1,8 @@
 /* Pass VIPS images through gmic
  *
  * AF, 6/10/14
+ * 23/8/19
+ *      - revise for vips8.8
  */
 
 /*
@@ -33,7 +35,6 @@
 #define _(S) (S)
 
 #include <vips/vips.h>
-#include <vips/dispatch.h>
 
 #include <limits.h>
 
