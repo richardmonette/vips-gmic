@@ -1,15 +1,1 @@
-vips-gmic
-=========
-
-libvips plugin for running gmic commands.
-
-Build the plugin and install to `$VIPSHOME/lib/vips-plugins-8.9` (or whatever
-version you are using) with:
-
-  make debug
-  make install
-
-Then run with eg.:
-
-  vips gmic ~/pics/k2.jpg x.jpg 20 1 1 -- "-verbose - -blur 10"
-
+minimalist (removed gmic for clarity around which parts are from vips itself) example of building a vips plugin pulled from various examples (more discussion: https://github.com/libvips/libvips/discussions/3331)
